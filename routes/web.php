@@ -1,7 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Frontend\AgentListingController;
+use App\Http\Controllers\Frontend\DashboardController;
+use App\Http\Controllers\Frontend\FrontendController;
+use App\Http\Controllers\Frontend\ProfileController as FrontendProfileController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,13 +17,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login');
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dasboard.index');
 
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
+
+Route::get('/', [FrontendController::class, 'index'])->name('home');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -33,4 +33,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+Route::group([
+    'middleware' => 'auth',
+    'prefix' => 'user',
+    'as' => 'user.'
+], function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); //user.dashboard
+    Route::get('/profile', [FrontendProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [FrontendProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile-password', [FrontendProfileController::class, 'updatePassword'])->name('profile-password.update');
+
+    // Agent Listing
+    Route::resource('/listing', AgentListingController::class);
+});
+
+require __DIR__ . '/auth.php';
